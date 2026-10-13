@@ -1,0 +1,118 @@
+name: Build ASURA mobile
+on:
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: Build target (Android produces native libraries and an asset-free emulator APK)
+        type: choice
+        options: [both, ios, android]
+        default: both
+        required: true
+permissions:
+  contents: read
+concurrency:
+  group: asura-mobile-builds
+  cancel-in-progress: false
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      commit: ${{ steps.resolve.outputs.commit }}
+      matrix: ${{ steps.resolve.outputs.matrix }}
+    steps:
+      - name: Resolve one private source revision
+        id: resolve
+        shell: python
+        env:
+          ASURA_SOURCE_TOKEN: ${{ secrets.ASURA_SOURCE_TOKEN }}
+          ASURA_PLATFORM: ${{ inputs.platform }}
+        run: |
+          import json, os, re, sys, urllib.request
+          try:
+              token = os.environ['ASURA_SOURCE_TOKEN']
+              if not token:
+                  raise ValueError('Missing credential')
+              def read(path):
+                  req = urllib.request.Request('https://api.github.com/repos/jayandradeph/asura-mobile' + path,
+                      headers={'Authorization': 'Bearer ' + token, 'Accept': 'application/vnd.github+json',
+                               'X-GitHub-Api-Version': '2022-11-28'})
+                  with urllib.request.urlopen(req, timeout=30) as r:
+                      return json.load(r)
+              if read('')['private'] is not True:
+                  raise ValueError('Source must remain private')
+              commit = read('/commits/main')['sha']
+              if not re.fullmatch('[a-f0-9]{40}', commit):
+                  raise ValueError('Invalid revision')
+              platform = os.environ['ASURA_PLATFORM']
+              if platform not in ('both', 'ios', 'android'):
+                  raise ValueError('Invalid target')
+              jobs = []
+              if platform in ('both', 'ios'):
+                  jobs.append({'target': 'ios', 'runner': 'macos-26'})
+              if platform in ('both', 'android'):
+                  jobs.extend({'target': 'android-' + abi, 'runner': 'windows-2025'}
+                              for abi in ('x86_64', 'arm64-v8a'))
+              with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+                  f.write('commit=' + commit + '\n')
+                  f.write('matrix=' + json.dumps({'include': jobs}) + '\n')
+              print('Private source access verified; build targets resolved.')
+          except Exception:
+              print('Preflight failed. Check the source repository and ASURA_SOURCE_TOKEN secret.')
+              sys.exit(1)
+  build:
+    needs: plan
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    steps:
+      - name: Check out private source
+        id: source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          repository: jayandradeph/asura-mobile
+          ref: ${{ needs.plan.outputs.commit }}
+          token: ${{ secrets.ASURA_SOURCE_TOKEN }}
+          persist-credentials: false
+          path: source
+          show-progress: false
+      - name: Compile and verify (private logs)
+        shell: python
+        env:
+          ASURA_TARGET: ${{ matrix.target }}
+          ASURA_COMMIT: ${{ needs.plan.outputs.commit }}
+        run: |
+          import os, pathlib, subprocess, sys
+          root = pathlib.Path('source')
+          log = root / 'Reports/cloud/bootstrap.log'
+          log.parent.mkdir(parents=True, exist_ok=True)
+          try:
+              with log.open('w') as output:
+                  code = subprocess.call([sys.executable, 'Tools/ci/build.py', '--target', os.environ['ASURA_TARGET'],
+                      '--commit', os.environ['ASURA_COMMIT']], cwd=root, stdout=output, stderr=subprocess.STDOUT)
+              print('Compilation and checks passed.' if code == 0 else 'Build failed; detailed output stays private.')
+              sys.exit(code)
+          except Exception:
+              print('Build could not start; private output has not been printed.')
+              sys.exit(1)
+      - name: Save output and logs to private draft release
+        if: ${{ always() && steps.source.outcome == 'success' }}
+        shell: python
+        env:
+          ASURA_SOURCE_TOKEN: ${{ secrets.ASURA_SOURCE_TOKEN }}
+          ASURA_TARGET: ${{ matrix.target }}
+          ASURA_COMMIT: ${{ needs.plan.outputs.commit }}
+        run: |
+          import os, pathlib, subprocess, sys
+          try:
+              log = pathlib.Path(os.environ['RUNNER_TEMP']) / 'private-upload.log'
+              with log.open('w') as output:
+                  code = subprocess.call([sys.executable, 'Tools/ci/publish-private.py'], cwd='source',
+                      stdout=output, stderr=subprocess.STDOUT)
+              print('Private delivery saved.' if code == 0 else 'Private delivery failed; check token permissions and private releases.')
+              sys.exit(code)
+          except Exception:
+              print('Private delivery could not start.')
+              sys.exit(1)
