@@ -1,23 +1,23 @@
-name: Build ASURA mobile
+name: Build ASURA
 on:
   workflow_dispatch:
     inputs:
       platform:
         description: Build target (Android produces native libraries and an asset-free emulator APK)
         type: choice
-        options: [both, ios, android]
-        default: both
+        options: [all, windows, mobile, ios, android]
+        default: all
         required: true
       source_ref:
         description: Reviewed private source branch
         type: choice
-        options: [main, integration/pc-mobile]
+        options: [main]
         default: main
         required: true
 permissions:
   contents: read
 concurrency:
-  group: asura-mobile-builds
+  group: asura-builds
   cancel-in-progress: false
 jobs:
   plan:
@@ -49,18 +49,20 @@ jobs:
               if read('')['private'] is not True:
                   raise ValueError('Source must remain private')
               source_ref = os.environ['ASURA_SOURCE_REF']
-              if source_ref not in ('main', 'integration/pc-mobile'):
+              if source_ref not in ('main',):
                   raise ValueError('Unreviewed source branch')
               commit = read('/commits/' + urllib.parse.quote(source_ref, safe=''))['sha']
               if not re.fullmatch('[a-f0-9]{40}', commit):
                   raise ValueError('Invalid revision')
               platform = os.environ['ASURA_PLATFORM']
-              if platform not in ('both', 'ios', 'android'):
+              if platform not in ('all', 'windows', 'mobile', 'ios', 'android'):
                   raise ValueError('Invalid target')
               jobs = []
-              if platform in ('both', 'ios'):
+              if platform in ('all', 'windows'):
+                  jobs.append({'target': 'windows', 'runner': 'windows-2025'})
+              if platform in ('all', 'mobile', 'ios'):
                   jobs.append({'target': 'ios', 'runner': 'macos-26'})
-              if platform in ('both', 'android'):
+              if platform in ('all', 'mobile', 'android'):
                   jobs.extend({'target': 'android-' + abi, 'runner': 'windows-2025'}
                               for abi in ('x86_64', 'arm64-v8a'))
               with open(os.environ['GITHUB_OUTPUT'], 'a') as f:

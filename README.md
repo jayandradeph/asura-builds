@@ -1,14 +1,17 @@
-# ASURA mobile builds
+# ASURA builds
 
 This repository contains only public build orchestration. ASURA game source,
 compiler logs, binaries and game data are not published here.
 
-Authorized maintainers can use **Actions -> Build ASURA mobile -> Run workflow**
-and select **both**, **ios**, or **android**. Each run resolves the selected
+Authorized maintainers can use **Actions -> Build ASURA -> Run workflow**
+and select **all**, **windows**, **mobile**, **ios**, or **android**.
+`all` builds Windows, Android and iOS; `mobile` builds Android and iOS. Each run resolves the selected
 reviewed branch in private `jayandradeph/asura` once, then all jobs build that
-exact revision. Use `main` for normal builds; `integration/pc-mobile` is the
-reviewed PC/mobile consolidation candidate. This is not a pull-request build path.
+exact revision. Only the reviewed `main` branch is accepted. This is not a pull-request build path.
 
+- Windows: standard `windows-2025` runner; all 25 Release/Win32 executables
+  (client, emulator, four servers and 19 editors/tools), with checksums. This is
+  compiled output, not a complete game installer or server deployment package.
 - iOS: standard `macos-26` runner; unsigned device IPA, without game data.
 - Android: standard `windows-2025` runners; x86_64 and ARM64 native libraries,
   plus an unsigned, asset-free x86_64 emulator APK. No full phone APK.
