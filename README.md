@@ -9,7 +9,7 @@ and select **all**, **windows**, **mobile**, **ios**, or **android**.
 reviewed branch in private `jayandradeph/asura` once, then all jobs build that
 exact revision. Only the reviewed `main` branch is accepted. This is not a pull-request build path.
 
-- Windows: standard `windows-2025` runner; all 25 Release/Win32 executables
+- Windows: standard `windows-2022` runner; all 25 Release/Win32 executables
   (client, emulator, four servers and 19 editors/tools), with checksums. This is
   compiled output, not a complete game installer or server deployment package.
 - iOS: standard `macos-26` runner; unsigned device IPA, without game data.

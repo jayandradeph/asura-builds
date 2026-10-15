@@ -59,7 +59,7 @@ jobs:
                   raise ValueError('Invalid target')
               jobs = []
               if platform in ('all', 'windows'):
-                  jobs.append({'target': 'windows', 'runner': 'windows-2025'})
+                  jobs.append({'target': 'windows', 'runner': 'windows-2022'})
               if platform in ('all', 'mobile', 'ios'):
                   jobs.append({'target': 'ios', 'runner': 'macos-26'})
               if platform in ('all', 'mobile', 'android'):
