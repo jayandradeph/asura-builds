@@ -8,6 +8,12 @@ on:
         options: [both, ios, android]
         default: both
         required: true
+      source_ref:
+        description: Reviewed private source branch
+        type: choice
+        options: [main, integration/pc-mobile]
+        default: main
+        required: true
 permissions:
   contents: read
 concurrency:
@@ -27,21 +33,25 @@ jobs:
         env:
           ASURA_SOURCE_TOKEN: ${{ secrets.ASURA_SOURCE_TOKEN }}
           ASURA_PLATFORM: ${{ inputs.platform }}
+          ASURA_SOURCE_REF: ${{ inputs.source_ref }}
         run: |
-          import json, os, re, sys, urllib.request
+          import json, os, re, sys, urllib.request, urllib.parse
           try:
               token = os.environ['ASURA_SOURCE_TOKEN']
               if not token:
                   raise ValueError('Missing credential')
               def read(path):
-                  req = urllib.request.Request('https://api.github.com/repos/jayandradeph/asura-mobile' + path,
+                  req = urllib.request.Request('https://api.github.com/repos/jayandradeph/asura' + path,
                       headers={'Authorization': 'Bearer ' + token, 'Accept': 'application/vnd.github+json',
                                'X-GitHub-Api-Version': '2022-11-28'})
                   with urllib.request.urlopen(req, timeout=30) as r:
                       return json.load(r)
               if read('')['private'] is not True:
                   raise ValueError('Source must remain private')
-              commit = read('/commits/main')['sha']
+              source_ref = os.environ['ASURA_SOURCE_REF']
+              if source_ref not in ('main', 'integration/pc-mobile'):
+                  raise ValueError('Unreviewed source branch')
+              commit = read('/commits/' + urllib.parse.quote(source_ref, safe=''))['sha']
               if not re.fullmatch('[a-f0-9]{40}', commit):
                   raise ValueError('Invalid revision')
               platform = os.environ['ASURA_PLATFORM']
@@ -72,7 +82,7 @@ jobs:
         id: source
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
-          repository: jayandradeph/asura-mobile
+          repository: jayandradeph/asura
           ref: ${{ needs.plan.outputs.commit }}
           token: ${{ secrets.ASURA_SOURCE_TOKEN }}
           persist-credentials: false

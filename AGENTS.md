@@ -4,7 +4,7 @@
   raw build logs, binaries, assets and credentials out of every commit and public
   Actions artifact. This applies to failure paths as well as successful builds.
 - Only workflow configuration and maintainer documentation belong here. The
-  game and build scripts live in the private `jayandradeph/asura-mobile` repo.
+  game and build scripts live in the private `jayandradeph/asura` repo.
 - Use manual-only builds and one resolved private source commit per run. Never
   add a secret-bearing pull-request, fork or untrusted branch execution path.
 - Pin third-party actions to reviewed commit hashes. Use minimum permissions,
