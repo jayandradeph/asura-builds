@@ -37,3 +37,10 @@ or future changes to GitHub's terms. No larger runner is configured.
 
 Build success proves compilation and package checks, not gameplay parity,
 physical-device FPS, or thermal behavior. Runtime testing remains separate.
+
+## Windows validation
+
+[Windows run 38695167901](https://github.com/jayandradeph/asura-builds/actions/runs/38695167901)
+passed the full Release/Win32 solution build. The downloaded private bundle
+passed the expected 25-executable inventory, architecture and checksum checks.
+This is build/package verification; no installation or gameplay claim is made.
