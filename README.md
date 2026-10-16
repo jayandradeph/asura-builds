@@ -11,10 +11,12 @@ exact revision. Only the reviewed `main` branch is accepted. This is not a pull-
 
 - Windows: standard `windows-2022` runner; all 25 Release/Win32 executables
   (client, emulator, four servers and 19 editors/tools), with checksums. This is
-  compiled output, not a complete game installer or server deployment package.
+  compiled output plus the client/DLL application package and ASURA launcher installer.
+  Server deployment configuration is not included.
 - iOS: standard `macos-26` runner; unsigned device IPA, without game data.
 - Android: standard `windows-2025` runners; x86_64 and ARM64 native libraries,
-  plus an unsigned, asset-free x86_64 emulator APK. No full phone APK.
+  plus unsigned, asset-free x86_64 emulator and ARM64 phone downloader APKs.
+  APKs require signing before installation; signing keys stay off the runners.
 - Outputs and diagnostic logs: draft releases in the private source repository.
   GitHub authentication and source-repository access are required to download.
 

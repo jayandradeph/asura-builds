@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
     inputs:
       platform:
-        description: Build target (Android produces native libraries and an asset-free emulator APK)
+        description: Build target (Android includes unsigned phone and emulator downloader APKs)
         type: choice
         options: [all, windows, mobile, ios, android]
         default: all
