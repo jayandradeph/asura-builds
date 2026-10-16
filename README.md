@@ -46,3 +46,13 @@ physical-device FPS, or thermal behavior. Runtime testing remains separate.
 passed the full Release/Win32 solution build. The downloaded private bundle
 passed the expected 25-executable inventory, architecture and checksum checks.
 This is build/package verification; no installation or gameplay claim is made.
+
+
+## Version 1.0 build verification
+
+[Combined run 38870022112](https://github.com/jayandradeph/asura-builds/actions/runs/38870022112)
+passed Windows, iOS, Android ARM64 and Android x86_64. Downloaded private packages
+passed source-identity, checksum, architecture and version checks. The Windows
+installer/client, iPhone IPA and both Android downloader APKs use app version 1.0.
+The public run has no uploaded Actions artifacts. Outputs and detailed logs remain
+in private draft releases. Device gameplay and store distribution are separate.
